@@ -407,6 +407,7 @@
   flex-direction: column;
   padding: 2rem;
   z-index: 2;
+  min-height: 15rem;
 }
 
 .menu-items {
@@ -449,6 +450,7 @@
   padding: 2rem;
   z-index: 3;
   transition: .5s;
+  min-height: 10rem;
 }
 
 .finish div{
