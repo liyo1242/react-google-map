@@ -520,11 +520,11 @@ function App() {
                         </div>
                     </div>
                 }
-                {!isRoute && originPlace ? // 起點有值出現
+                {!isDriverPage && !isRoute && originPlace ? // 起點有值出現
                     <div className="finish" onClick={() => route()}><span>完成</span></div>
                 :null
                 }
-                {!isRouteCallTaxi && isRoute ?
+                {!isDriverPage && !isRouteCallTaxi && isRoute ?
                     <div className="finish" onClick={() => returnHandler()}><span>回上一步</span></div>
                 :null
                 }
