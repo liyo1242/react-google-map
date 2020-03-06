@@ -168,18 +168,17 @@ function App() {
     }, [mapCenter])
 
     useEffect(() => {
-        let driverTest
         if(isCallingTaxi) {
             // 建立socket連線 取得司機資料
-            driverTest = setTimeout(() => {
+            setTimeout(() => {
                 setDriverData({
                     driverImageUrl: 'https://i.imgur.com/hmBM0Q1.jpg',
                     driverName: 'chicken',
                     carLabel: 'AB-0001'
                 })
-            }, 3000)
+                setIsDriverPage(true);
+            }, 5000)
         }
-        return () => clearTimeout(driverTest);
     }, [isCallingTaxi])
 
     function searchBarHandler(e, who, spkey) {
@@ -288,7 +287,6 @@ function App() {
 
             setIsCallingTaxi(true);
 
-            setTimeout(() => {setIsCallingTaxi(false)}, 10000)
             return false;
         }
         setIsRouteCallTaxi(true);
@@ -403,6 +401,10 @@ function App() {
         if(line) line.setMap(null);
         directionsDisplay.setDirections({routes: []});
         googleFunc.unlockMap(map);
+        setOriginPlace("")
+        setOriginPlaceId("")
+        setDestinationPlace("")
+        setDestinationPlaceId("")
 
         setIsEnterMode(false);
         setIsKeyboardEnterMode(false);
@@ -411,6 +413,7 @@ function App() {
         setIsRoute(false);
         setIsCallingTaxi(false);
         // for test
+        console.log()
         clearTimeout(CallTaxiTest)
 
         setMapListener(map.addListener('dragend', throttle((e) => {
@@ -432,7 +435,7 @@ function App() {
         CallTaxiTest = setTimeout(() => {
             setIsCallingTaxi(false)
             setIsDriverPage(true);
-        }, 3000)
+        }, 5000)
     }
 
     return (
@@ -529,7 +532,7 @@ function App() {
                 :null
                 }
                 <div id="map"></div>
-                {isCallingTaxi
+                {!isDriverPage && isCallingTaxi
                 ?   <div className="waitTaxi">
                         <div className="smoke">
                             <span>幫</span>
@@ -537,15 +540,15 @@ function App() {
                             <span>挑</span>
                             <span>選</span>
                             <span>好</span>
-                            <span>撕</span>
-                            <span>雞</span>
+                            <span>司</span>
+                            <span>機</span>
                             <span>中</span>
                         </div>
                         <div className="cancleSmoke" onClick={() => cancleTaxi()}>取消</div>
                     </div>
                 :null
                 }
-                {isDriverPage && Object.keys(driverData).length ?
+                {isDriverPage  ?
                     <div className="driverPage">
                         <img src={driverData.driverImageUrl}/>
                         <div>DriverName : {driverData.driverName}</div>
