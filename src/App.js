@@ -223,6 +223,7 @@ function App() {
 
     function predictHandler(e) {
         console.log('detect click predictBar~~');
+        setIsKeyboardEnterMode(false)
         switch (searchBarState) {
             case 'origin':
                 setOriginPlace(e.target.innerHTML)
@@ -348,7 +349,7 @@ function App() {
         <ThemeWrapper>
             <div style={{height: screenHeight + 'px'}} className="page">
                 <div className="autocomplete">
-                    <div className="autocomplete__searchbar" id="getOn">
+                    <div className="autocomplete__searchbar" id="getOn" onClick={()=>setSearchBarState('origin')}>
                         <div className="autocomplete__searchbar__icon"><i style={searchBarState === "origin" ? {color: 'orange'} : {color: 'black'}} className="fa fa-map-marker" aria-hidden="true"/></div>
                         <div className="autocomplete__searchbar__input">
                             <input 
@@ -361,6 +362,7 @@ function App() {
                                 onCompositionUpdate={compositioningHandle} 
                                 onCompositionEnd={e => compositionHandle(e, 'origin')} 
                                 onChange={e => searchBarHandler(e, 'origin')}
+                                disabled={!(isEnterMode && isKeyboardEnterMode)}
                             />
                             {isKeyboardEnterMode
                             ?   <i className="fa fa-times clear" onClick={() => clear('origin')} aria-hidden="true"/>
@@ -370,7 +372,7 @@ function App() {
                     </div>
 
                     {isEnterMode 
-                    ?   <div className="autocomplete__searchbar" id="getOff">
+                    ?   <div className="autocomplete__searchbar" id="getOff" onClick={()=>setSearchBarState('destination')}>
                             <div className="autocomplete__searchbar__icon"><i style={searchBarState === "destination" ? {color: 'orange'} : {color: 'black'}} className="fa fa-map-marker" aria-hidden="true"/></div>
                             <div className="autocomplete__searchbar__input">
                                 <input 
@@ -383,6 +385,7 @@ function App() {
                                     onCompositionUpdate={compositioningHandle} 
                                     onCompositionEnd={e => compositionHandle(e, 'destination')} 
                                     onChange={e => searchBarHandler(e, 'destination')}
+                                    disabled={!(isEnterMode && isKeyboardEnterMode)}
                                 />
                                 {isKeyboardEnterMode
                                 ?   <i className="fa fa-times clear" onClick={() => clear('destination')} aria-hidden="true"/>
@@ -402,16 +405,16 @@ function App() {
             {/*IsGPSbroken ? 警示框 : null */}
                 <div id="arrow" className={`arrow ${isDraging ? 'arrowMove' : ''}`}>
                     {isGPSbroken ?
-                        <div className="arrow-alert">目前無法定位到您的位置</div>
+                        <div className="arrow-alert" onClick={() => setIsEnterMode(true)}>目前無法定位到您的位置</div>
                     :null
                     }
                     <i className="fa fa-map-marker" aria-hidden="true"/>
                 </div>
                 <div className="menu">
                     <div className="menu-items">
-                        <div className="menu-item active" onClick={() => alert('我還不知道這要做什麼')}><span>立即叫車</span></div>
-                        <div className="menu-item" onClick={() => alert('你知道這要做什麼嗎')}><span>立即回家</span></div>
-                        <div className="menu-item" onClick={() => alert('我問一下別人這要做什麼')}><span>預約叫車</span></div>
+                        <div className="menu-item active" onClick={() => alert('啾啾啾')}><span>立即叫車</span></div>
+                        <div className="menu-item" onClick={() => alert('呱呱呱')}><span>立即回家</span></div>
+                        <div className="menu-item" onClick={() => alert('咕咕咕')}><span>預約叫車</span></div>
                     </div>
                     <div className="menu-items">
                         <div className="menu-item" onClick={() => setIsEnterMode(true)}><span>下車地址(選填)</span></div>
