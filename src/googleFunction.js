@@ -78,15 +78,15 @@ export const usePosition = () => {
         let geo_options = {
             enableHighAccuracy: true,
             maximumAge: 30000,
-            timeout: 5000
+            timeout: 4000
         }
 
         let watcher = geo.watchPosition(onChange, onError, geo_options);
-
         let reListener = () => {
             console.log('remove listener')
             geo.clearWatch(watcher)
         }
+        setTimeout(reListener, 4100);
 
         return () => reListener();
     }, [])
