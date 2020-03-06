@@ -412,6 +412,7 @@ function App() {
         setIsDriverPage(false);
         setIsRoute(false);
         setIsCallingTaxi(false);
+        setSearchBarState('origin');
         // for test
         console.log()
         clearTimeout(CallTaxiTest)
