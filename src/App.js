@@ -39,10 +39,11 @@ function App() {
     const [mapListener, setMapListener] = useState(null);
     // chinese keyin
     const [compositionEnd, setCompositionEnd] = useState(true);
-    // all thing done
+    // display thing flag
     const [isEnterMode, setIsEnterMode] = useState(false);
     const [isKeyboardEnterMode, setIsKeyboardEnterMode] = useState(false);
     const [isCallingTaxi, setIsCallingTaxi] = useState(false);
+    const [isGPSbroken, setIsGPSbroken] = useState(false);
     // 1 : origininput + menu
     // screen height
     const [screenHeight, setScreenHeight] = useState();
@@ -80,6 +81,7 @@ function App() {
             _setListener()
             // i feel something strange
             let latlng = { lat: lat, lng: lng };
+
             if(lat && lng) {
                 googleFunc.geocodeLatLng(geocoder, latlng)
                 .then(data => {
@@ -88,15 +90,15 @@ function App() {
                 map.setCenter(latlng);
                 map.setZoom(18);
             }
-            
 
             function _setListener() {
                 map.addListener('drag', () => {
+                    setIsGPSbroken(false);
                     setIsEnterMode(true)
                     setIsDraging(true)
                 })
                 // store the map listener
-                map.addListener('dragend', throttle((e) => {
+                setMapListener(map.addListener('dragend', throttle((e) => {
                     setIsDraging(false);
                     console.log('detect map moving~~');
                     let geoOption = { lat: map.getCenter().lat(), lng: map.getCenter().lng() }
@@ -105,15 +107,35 @@ function App() {
                     .then(data => {
                         setMapCenter(data);
                     });
-                }, 2000))
+                }, 2000)))
             }
         }
     }, [loaded]); // triggle by "loaded"
 
-     useEffect(() => {
+    useEffect(() => {
+        console.log(`effect ${Lerror}`);
+        console.log(Lerror)
+        if(Lerror) {
+            setIsGPSbroken(true);
+            console.log(map);
+            switch(Lerror.code) {
+                case 1:
+                    console.log('PERMISSION_DENIED');
+                break;
+                case 2:
+                    console.log('POSITION_UNAVAILABLE');
+                break;
+                case 3:
+                    console.log('TIMEOUT');
+                break;
+                default:
+                    console.log('unknown error');
+                break;
+            }
+        }
         if(loaded && !Lerror) {
             console.log('Latlng useEffect !!!!');
-            let latlng = { lat: lat, lng: lng };                
+            let latlng = { lat: lat, lng: lng };
             googleFunc.geocodeLatLng(geocoder, latlng)
             .then(data => {
                 setMapCenter(data);
@@ -121,7 +143,7 @@ function App() {
             map.setCenter(latlng);
             map.setZoom(18);
         }
-    }, [lat, lng])
+    }, [lat, lng, Lerror])
 
     useEffect(() => {
         if (mapCenter && loaded) {
@@ -291,7 +313,7 @@ function App() {
 
             // adjust the map view, but required ??
             map.setCenter(d.routes[0].bounds.getCenter())
-            googleFunc.lockMap(map);
+            window.google.maps.event.removeListener(mapListener);
         })
         return true;
     }
@@ -317,6 +339,7 @@ function App() {
     }
 
     function enterMode () {
+        setIsGPSbroken(false);
         setIsEnterMode(true);
         setIsKeyboardEnterMode(true);
     }
@@ -342,7 +365,7 @@ function App() {
                             {isKeyboardEnterMode
                             ?   <i className="fa fa-times clear" onClick={() => clear('origin')} aria-hidden="true"/>
                             :   <i className="fa fa-eyedropper" onClick={() => enterMode()} aria-hidden="true"/>        
-                            }                            
+                            }
                         </div>
                     </div>
 
@@ -375,8 +398,13 @@ function App() {
                         predictResult ? predictResult.map((r,i) => <div id={r.place_id} className="predictResult__item" key={i} onClick={predictHandler}>{r.description}</div>) : null
                     }
                     </div>
-                </div>             
+                </div>
+            {/*IsGPSbroken ? 警示框 : null */}
                 <div id="arrow" className={`arrow ${isDraging ? 'arrowMove' : ''}`}>
+                    {isGPSbroken ?
+                        <div className="arrow-alert">目前無法定位到您的位置</div>
+                    :null
+                    }
                     <i className="fa fa-map-marker" aria-hidden="true"/>
                 </div>
                 <div className="menu">
@@ -391,7 +419,7 @@ function App() {
                     </div>
                 </div>
                 {originPlace ? // 規則 : 只有在起點有值出現, 無例外
-                    <div className="finish" onClick={() => route()}><div>完成</div></div>
+                    <div className="finish" onClick={() => route()}><span>完成</span></div>
                 :null
                 }
                 <div id="map"></div>
@@ -410,7 +438,6 @@ function App() {
                     </div>
                 :null
                 }
-                
                 <div className={`changeMode ${themeState.dark ? 'light' : "dark"}`} onClick={() => toggleMode(themeState.dark)}><span></span></div>
             </div>
         </ThemeWrapper>

@@ -103,6 +103,31 @@
   align-items: center;
 }
 
+.arrow-alert {
+  letter-spacing: 2px;
+  position: absolute;
+  font-size: 1rem;
+  top: -30px;
+  width: 8rem;
+  height: 4rem;
+  color: black;
+  background: rgba(255,255,255,.8);
+  border-radius: 5px;
+}
+
+.arrow-alert:before {
+  content: '';
+  width: 0;
+  height: 0;
+  border-style: solid;
+  border-width: 10px 10px 0 10px;
+  border-color: rgba(255,255,255,.8) transparent;
+  position: absolute;
+  bottom: -10px;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
 .arrowMove {
   animation: animate1 1s infinite;
 }
@@ -426,6 +451,9 @@
   text-align: center;
   background: white;
   transition: .5s;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 
 .menu-item.active {
@@ -435,7 +463,7 @@
 
 .menu-item span {
   font-family: 'Arial','Microsoft YaHei';
-  font-size: 2rem;
+  font-size: 1rem;
 }
 
 .menu-item:hover {
@@ -451,14 +479,18 @@
   z-index: 3;
   transition: .5s;
   min-height: 10rem;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: black;
+  background-clip: content-box;
 }
 
-.finish div{
+.finish span{
   flex: 1 1;
-  background: black;
   color: white;
   text-align: center;
-  font-size: 2rem;
+  font-size: 1rem;
 }
 
 /* wait taxi */

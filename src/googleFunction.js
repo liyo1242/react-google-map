@@ -53,7 +53,7 @@ export function geolocation(mapObject, setLoading) {
 // GPS: refactoring code use hook
 export const usePosition = () => {
     const [position, setPosition] = useState({})
-    const [error, setError] = useState(null)
+    const [Lerror, setLError] = useState(null)
 
     const onChange = ({coords}) => {
         console.log(`High Accuracy: lat: ${coords.latitude} lng: ${coords.longitude}`);
@@ -62,19 +62,36 @@ export const usePosition = () => {
             lng: coords.longitude
         })
     }
-    const onError = error => setError(error.message)
+    const onError = error => {
+        console.log('您沒有開啟GPS權限喔')
+        setLError(error)
+    }
     useEffect(() => {
+        console.log('in geolocation effect')
         const geo = navigator.geolocation;
         if(!geo) {
-            setError('Geolocation is broken')
+            console.log('無法取得正確位置')
+            setLError('Geolocation is broken')
             return
         }
-        let watcher = geo.watchPosition(onChange, onError);
 
-        return () => geo.clearWatch(watcher)
+        let geo_options = {
+            enableHighAccuracy: true,
+            maximumAge: 30000,
+            timeout: 5000
+        }
+
+        let watcher = geo.watchPosition(onChange, onError, geo_options);
+
+        let reListener = () => {
+            console.log('remove listener')
+            geo.clearWatch(watcher)
+        }
+
+        return () => reListener();
     }, [])
 
-    return {...position, error}
+    return {...position, Lerror}
 }
 
 // @ return marker Object
