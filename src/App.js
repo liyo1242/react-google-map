@@ -120,8 +120,7 @@ function App() {
         console.log(`effect ${Lerror}`);
         console.log(Lerror)
         if(Lerror) {
-            setIsGPSbroken(true);
-            console.log(map);
+            googleFunc.geolocation(map, () => setIsGPSbroken(true));
             switch(Lerror.code) {
                 case 1:
                     console.log('PERMISSION_DENIED');

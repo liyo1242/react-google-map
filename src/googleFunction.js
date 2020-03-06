@@ -14,8 +14,7 @@ export function animateLine(line) {
 // For google map function
 // @ return GEO position
 // sometime the location will bad
-export function geolocation(mapObject, setLoading) {
-    setLoading(true);
+export function geolocation(mapObject, cb) {
     return new Promise((resolve, reject) => {
         let watcher = navigator.geolocation.watchPosition(
             position => {
@@ -32,9 +31,7 @@ export function geolocation(mapObject, setLoading) {
                     mapObject.setZoom(18);
                     resolve(position)
                 },
-                error => {
-                    console.log('watchPosition error.code' + error.code);
-                })
+                error => cb)
             },
             {
                 enableHighAccuracy: true,
@@ -63,32 +60,37 @@ export const usePosition = () => {
         })
     }
     const onError = error => {
+        console.log('要開啟GPS權限喔')
+        navigator.geolocation.getCurrentPosition(onChange, onCurrentPositionError);
+    }
+
+    const onCurrentPositionError = error => {
         console.log('您沒有開啟GPS權限喔')
         setLError(error)
     }
+
+    const geo_options = {
+        enableHighAccuracy: true,
+        maximumAge: 30000,
+        timeout: 3000
+    }
+
     useEffect(() => {
         console.log('in geolocation effect')
-        const geo = navigator.geolocation;
-        if(!geo) {
+
+        if(navigator && navigator.geolocation){
+            let watcher = navigator.geolocation.watchPosition(onChange, onError, geo_options);
+            let reListener = () => {
+                console.log('remove listener')
+                navigator.geolocation.clearWatch(watcher)
+            }
+            setTimeout(reListener, 3100);
+            return () => reListener();
+        } else {
             console.log('無法取得正確位置')
             setLError('Geolocation is broken')
-            return
-        }
-
-        let geo_options = {
-            enableHighAccuracy: true,
-            maximumAge: 30000,
-            timeout: 4000
-        }
-
-        let watcher = geo.watchPosition(onChange, onError, geo_options);
-        let reListener = () => {
-            console.log('remove listener')
-            geo.clearWatch(watcher)
-        }
-        setTimeout(reListener, 4100);
-
-        return () => reListener();
+        }        
+        
     }, [])
 
     return {...position, Lerror}
