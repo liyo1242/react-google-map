@@ -44,7 +44,11 @@ function App() {
     const [isKeyboardEnterMode, setIsKeyboardEnterMode] = useState(false);
     const [isCallingTaxi, setIsCallingTaxi] = useState(false);
     const [isGPSbroken, setIsGPSbroken] = useState(false);
-    // 1 : origininput + menu
+    const [isRoute, setIsRoute] = useState(false);
+    const [isRouteCallTaxi, setIsRouteCallTaxi] = useState(false);
+    const [isDriverPage, setIsDriverPage] = useState(false);
+    // driver data
+    const [driverData, setDriverData] = useState({})
     // screen height
     const [screenHeight, setScreenHeight] = useState();
     // route line
@@ -163,6 +167,21 @@ function App() {
         }
     }, [mapCenter])
 
+    useEffect(() => {
+        let driverTest
+        if(isCallingTaxi) {
+            // 建立socket連線 取得司機資料
+            driverTest = setTimeout(() => {
+                setDriverData({
+                    driverImageUrl: 'https://i.imgur.com/hmBM0Q1.jpg',
+                    driverName: 'chicken',
+                    carLabel: 'AB-0001'
+                })
+            }, 3000)
+        }
+        return () => clearTimeout(driverTest);
+    }, [isCallingTaxi])
+
     function searchBarHandler(e, who, spkey) {
         console.log('detect searchBar onChange~~');
         setSearchBarState(who);
@@ -251,20 +270,35 @@ function App() {
     }
 
     function route() {
+        setIsRoute(true);
+        window.google.maps.event.removeListener(mapListener);
         if(!(originPlaceId && destinationPlaceId)) {
             // alert('please enter the full data to route');
+            if(originPlaceMarker) originPlaceMarker.setMap(null)
+            let Olatlng = { lat: map.getCenter().lat(), lng: map.getCenter().lng() }
+            let Omarker = googleFunc.placeIcon(1, Olatlng, map, 'O')
+            Omarker.setMap(map);
+            setOriginPlaceMarker(Omarker);
+
+            // put some info on the origin marker
+            let infoBox = new window.google.maps.InfoWindow({
+                content: `乘客在 ${originPlace} 等待司機的到來`
+            })
+            infoBox.open(map, Omarker);
+
             setIsCallingTaxi(true);
+
+            setTimeout(() => {setIsCallingTaxi(false)}, 10000)
             return false;
         }
+        setIsRouteCallTaxi(true);
         // stop the map idle listener
-        window.google.maps.event.removeListener(mapListener);
 
         googleFunc.drawingRoute(directionsService, directionsDisplay, { originPlaceId: originPlaceId, destinationPlaceId: destinationPlaceId })
         .then((d) => {
 
             // place origin place Marker
             if(originPlaceMarker) originPlaceMarker.setMap(null)
-                console.log(d.routes[0].legs[0].start_address)
             let Olatlng = {lat: d.routes[0].legs[0].start_location.lat(), lng: d.routes[0].legs[0].start_location.lng()}
             let Omarker = googleFunc.placeIcon(1, Olatlng, map, 'A')
             Omarker.setMap(map);
@@ -319,7 +353,7 @@ function App() {
         return true;
     }
 
-    // Dark Mode 
+    // Dark Mode
     const themeState = useTheme();
 
     function toggleMode(isDark) {
@@ -332,6 +366,17 @@ function App() {
     }
 
     function returnHandler() {
+        setMapListener(map.addListener('dragend', throttle((e) => {
+            setIsDraging(false);
+            console.log('detect map moving~~');
+            let geoOption = { lat: map.getCenter().lat(), lng: map.getCenter().lng() }
+            // can I use Ref to solve this problem ??
+            googleFunc.geocodeLatLng(geocoder, geoOption)
+            .then(data => {
+                setMapCenter(data);
+            });
+        }, 2000)))
+        setIsRoute(false);
         directionsDisplay.setDirections({routes: []});
         destinationPlaceMarker.setMap(null);
         originPlaceMarker.setMap(null);
@@ -345,10 +390,56 @@ function App() {
         setIsKeyboardEnterMode(true);
     }
 
+    function destinationBtn() {
+        setIsEnterMode(true);
+        setSearchBarState('destination');
+    }
+
+    let CallTaxiTest;
+
+    function cancleTaxi() { // 回到原點 !!!
+        if(originPlaceMarker) originPlaceMarker.setMap(null)
+        if(destinationPlaceMarker) destinationPlaceMarker.setMap(null)
+        if(line) line.setMap(null);
+        directionsDisplay.setDirections({routes: []});
+        googleFunc.unlockMap(map);
+
+        setIsEnterMode(false);
+        setIsKeyboardEnterMode(false);
+        setIsRouteCallTaxi(false);
+        setIsDriverPage(false);
+        setIsRoute(false);
+        setIsCallingTaxi(false);
+        // for test
+        clearTimeout(CallTaxiTest)
+
+        setMapListener(map.addListener('dragend', throttle((e) => {
+            setIsDraging(false);
+            console.log('detect map moving~~');
+            let geoOption = { lat: map.getCenter().lat(), lng: map.getCenter().lng() }
+            // can I use Ref to solve this problem ??
+            googleFunc.geocodeLatLng(geocoder, geoOption)
+            .then(data => {
+                setMapCenter(data);
+            });
+        }, 2000)))
+    }
+
+
+    function routeCallTaxi() {
+        setIsCallingTaxi(true);
+        // 等待傳送 socket 回傳的司機資料
+        CallTaxiTest = setTimeout(() => {
+            setIsCallingTaxi(false)
+            setIsDriverPage(true);
+        }, 3000)
+    }
+
     return (
         <ThemeWrapper>
             <div style={{height: screenHeight + 'px'}} className="page">
                 <div className="autocomplete">
+                    {isRoute ? null :
                     <div className="autocomplete__searchbar" id="getOn" onClick={()=>setSearchBarState('origin')}>
                         <div className="autocomplete__searchbar__icon"><i style={searchBarState === "origin" ? {color: 'orange'} : {color: 'black'}} className="fa fa-map-marker" aria-hidden="true"/></div>
                         <div className="autocomplete__searchbar__input">
@@ -370,8 +461,9 @@ function App() {
                             }
                         </div>
                     </div>
+                    }
 
-                    {isEnterMode 
+                    {!isRoute && isEnterMode
                     ?   <div className="autocomplete__searchbar" id="getOff" onClick={()=>setSearchBarState('destination')}>
                             <div className="autocomplete__searchbar__icon"><i style={searchBarState === "destination" ? {color: 'orange'} : {color: 'black'}} className="fa fa-map-marker" aria-hidden="true"/></div>
                             <div className="autocomplete__searchbar__input">
@@ -402,42 +494,63 @@ function App() {
                     }
                     </div>
                 </div>
-            {/*IsGPSbroken ? 警示框 : null */}
-                <div id="arrow" className={`arrow ${isDraging ? 'arrowMove' : ''}`}>
-                    {isGPSbroken ?
-                        <div className="arrow-alert" onClick={() => setIsEnterMode(true)}>目前無法定位到您的位置</div>
-                    :null
-                    }
-                    <i className="fa fa-map-marker" aria-hidden="true"/>
-                </div>
-                <div className="menu">
-                    <div className="menu-items">
-                        <div className="menu-item active" onClick={() => alert('啾啾啾')}><span>立即叫車</span></div>
-                        <div className="menu-item" onClick={() => alert('呱呱呱')}><span>立即回家</span></div>
-                        <div className="menu-item" onClick={() => alert('咕咕咕')}><span>預約叫車</span></div>
+                {isRoute ? null
+                :   <div id="arrow" className={`arrow ${isDraging ? 'arrowMove' : ''}`}>
+                        {isGPSbroken ?
+                            <div className="arrow-alert" onClick={() => setIsEnterMode(true)}>目前無法定位到您的位置</div>
+                        :null
+                        }
+                        <i className="fa fa-map-marker" aria-hidden="true"/>
                     </div>
-                    <div className="menu-items">
-                        <div className="menu-item" onClick={() => setIsEnterMode(true)}><span>下車地址(選填)</span></div>
-                        <div className="menu-item" onClick={() => alert('再等我一下 快完成了:D')}><span>特殊需求</span></div>
+                }
+                {isRoute || isEnterMode ? null
+                :   <div className="menu">
+                        <div className="menu-items">
+                            <div className="menu-item active" onClick={() => alert('啾啾啾')}><span>立即叫車</span></div>
+                            <div className="menu-item" onClick={() => alert('呱呱呱')}><span>立即回家</span></div>
+                            <div className="menu-item" onClick={() => alert('咕咕咕')}><span>預約叫車</span></div>
+                        </div>
+                        <div className="menu-items">
+                            <div className="menu-item" onClick={() => destinationBtn()}><span>下車地址(選填)</span></div>
+                            <div className="menu-item" onClick={() => alert('再等我一下 快完成了:D')}><span>特殊需求</span></div>
+                        </div>
                     </div>
-                </div>
-                {originPlace ? // 規則 : 只有在起點有值出現, 無例外
+                }
+                {!isRoute && originPlace ? // 起點有值出現
                     <div className="finish" onClick={() => route()}><span>完成</span></div>
+                :null
+                }
+                {!isRouteCallTaxi && isRoute ?
+                    <div className="finish" onClick={() => returnHandler()}><span>回上一步</span></div>
+                :null
+                }
+                {!isDriverPage && isRouteCallTaxi ?
+                    <div className="finish" onClick={() => routeCallTaxi()}><span>快速叫車</span></div>
                 :null
                 }
                 <div id="map"></div>
                 {isCallingTaxi
                 ?   <div className="waitTaxi">
                         <div className="smoke">
-                            <span>車</span>
-                            <span>在</span>
-                            <span>來</span>
-                            <span>的</span>
-                            <span>路</span>
-                            <span>上</span>
-                            <span>了</span>
+                            <span>幫</span>
+                            <span>您</span>
+                            <span>挑</span>
+                            <span>選</span>
+                            <span>好</span>
+                            <span>撕</span>
+                            <span>雞</span>
+                            <span>中</span>
                         </div>
-                        <div className="cancleSmoke" onClick={() => setIsCallingTaxi(false)}>取消</div>
+                        <div className="cancleSmoke" onClick={() => cancleTaxi()}>取消</div>
+                    </div>
+                :null
+                }
+                {isDriverPage && Object.keys(driverData).length ?
+                    <div className="driverPage">
+                        <img src={driverData.driverImageUrl}/>
+                        <div>DriverName : {driverData.driverName}</div>
+                        <div>CarLabel : {driverData.carLabel}</div>
+                        <div className="finish" onClick={() => cancleTaxi()}>取消叫車</div>
                     </div>
                 :null
                 }
@@ -447,7 +560,6 @@ function App() {
     );
 }
 export default App;
-
 
 //useScript custom hooks from the site
 let cachedScripts = [];

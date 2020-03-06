@@ -44,6 +44,7 @@
   display: flex;
   justify-content: flex-start;
   pointer-events: auto;
+  box-shadow: 4px 10px 20px grey;
 }
 
 .autocomplete__searchbar__icon {
@@ -438,6 +439,7 @@
 .menu-items {
   display: flex;
   flex: 1;
+  box-shadow: 4px 10px 20px grey;
 }
 
 
@@ -498,7 +500,7 @@
   position: absolute;
   width: 100%;
   height: 100%;
-  background: #111;
+  background: rgba(1,1,1,.5);;
   z-index: 9;
   display: flex;
   flex-direction: column;
@@ -547,6 +549,9 @@
 .smoke span:nth-child(7) {
   animation-delay: .6s;
 }
+.smoke span:nth-child(8) {
+  animation-delay: .7s;
+}
 @keyframes animate {
   0% {
     filter: blur(0);
@@ -560,4 +565,28 @@
   100% {
     filter: blur(0);
   }
+}
+
+.driverPage {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    background: rgba(1,1,1,.8);
+}
+
+.driverPage img {
+    width: 8rem;
+    height: 8rem;
+    border-radius: 50%;
+}
+
+.driverPage div {
+    font-size: 2rem;
+    color: white;
+    padding: 3rem;
+    letter-spacing: .5rem
 }
