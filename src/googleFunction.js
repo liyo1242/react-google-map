@@ -142,7 +142,7 @@ export function autocompletePredict(autocompleteService, mapObject, text) {
     return new Promise((resolve, reject) => {
         autocompleteService.getPlacePredictions({
             bounds: bounds,
-            // componentRestrictions: "",
+            componentRestrictions: {country: 'tw'},
             input: text,
             type: 'establishment'
         }, data => resolve(data))

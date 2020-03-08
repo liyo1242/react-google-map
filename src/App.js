@@ -213,6 +213,7 @@ function App() {
         let value = searchBarState === 'origin' ? originPlace : destinationPlace;
         if (value) {
             googleFunc.autocompletePredict(autocomplete, map, value).then(d => {
+                console.log(d)
                 setPredictResult(d);
             })
         } else {
@@ -505,7 +506,7 @@ function App() {
                     <div className={`predictResult ${isKeyboardEnterMode ? 'active' : ''}`}>
                         <div className="predictResult__item" key='mapMode' style={{color: 'lightblue'}} onClick={() => setIsKeyboardEnterMode(false)}>切換到地圖輸入模式:D</div>
                     {
-                        predictResult ? predictResult.map((r,i) => <div id={r.place_id} className="predictResult__item" key={i} onClick={predictHandler}>{r.description}</div>) : null
+                        predictResult ? predictResult.map((r,i) => <div id={r.place_id} className="predictResult__item" key={i} onClick={predictHandler}>{r.description}</div>) : null //r.structured_formatting.main_text + r.structured_formatting.secondary_text
                     }
                     </div>
                 </div>
