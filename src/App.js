@@ -54,6 +54,8 @@ function App() {
     // route line
     const [line, setLine] = useState();
     const {lat, lng, Lerror} = googleFunc.usePosition()
+    // Debounce for GEOcode
+    const [debounceCount, setDebounceCount] = useState(0)
 
     useEffect(() => {
         if (loaded) {
@@ -194,20 +196,30 @@ function App() {
                 alert('what happen ??')
                 break;
         }
+
         if(spkey === undefined) {
             if(!compositionEnd) {
                 console.log('avoid API call during the composition')
                 return
             }
         }
-        if (e.target.value) {
-            googleFunc.autocompletePredict(autocomplete, map, e.target.value).then(d => {
+        setTimeout(() => setDebounceCount(debounceCount + 1), 1200);
+    }
+
+    useEffect(() => {
+        if(debounceCount === 0) {
+            return;
+        }
+        let value = searchBarState === 'origin' ? originPlace : destinationPlace;
+        if (value) {
+            googleFunc.autocompletePredict(autocomplete, map, value).then(d => {
                 setPredictResult(d);
             })
         } else {
             setPredictResult([]);
         }
-    }
+        
+    }, [debounceCount])
 
     function compositioningHandle() {
         console.log('ing')
@@ -455,7 +467,7 @@ function App() {
                                 onCompositionStart={compositioningHandle} 
                                 onCompositionUpdate={compositioningHandle} 
                                 onCompositionEnd={e => compositionHandle(e, 'origin')} 
-                                onChange={e => searchBarHandler(e, 'origin')}
+                                onChange={throttle(e => searchBarHandler(e, 'origin'), 2000)}
                                 disabled={!(isEnterMode && isKeyboardEnterMode)}
                             />
                             {isKeyboardEnterMode
